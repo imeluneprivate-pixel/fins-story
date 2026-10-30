@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fin's Ocean Adventure</title>
+<style>
+  :root {
+    --deep:#073b66; --blue:#087eaa; --aqua:#c9f3f4; --cream:#fff8e8;
+    --coral:#ff8c70; --gold:#ffd166; --ink:#12324a; --green:#2a9d8f;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; min-height:100vh; font-family:Arial, sans-serif; color:var(--ink);
+    background:linear-gradient(180deg,#8ee4ed 0%,#3aaacb 42%,#07527d 100%);
+    display:flex; align-items:center; justify-content:center; padding:18px;
+  }
+  .game {
+    width:min(760px,100%); background:var(--cream); border:5px solid white;
+    border-radius:25px; overflow:hidden; box-shadow:0 15px 40px #06334b66;
+  }
+  header {
+    text-align:center; padding:22px 18px 18px;
+    color:white; background:linear-gradient(135deg,#087eaa,#07527d);
+  }
+  header .fish { font-size:52px; line-height:1.1; }
+  h1 { margin:7px 0 5px; font-size:clamp(25px,5vw,36px); }
+  header p { margin:0; opacity:.95; }
+  main { padding:22px; }
+  .stats { display:flex; gap:10px; justify-content:space-between; margin-bottom:15px; flex-wrap:wrap; }
+  .pill { background:#e4f6f5; border-radius:30px; padding:8px 13px; font-weight:bold; font-size:14px; }
+  .progress { height:10px; background:#d9e8e8; border-radius:20px; overflow:hidden; margin-bottom:22px; }
+  .progress span { display:block; height:100%; width:0; background:var(--green); transition:width .25s; }
+  .scene {
+    background:linear-gradient(145deg,#dff8f5,#b9eaf1); border-radius:18px;
+    padding:18px; text-align:center; margin-bottom:18px; border:2px solid #b6e4e6;
+  }
+  .scene .emoji { font-size:46px; }
+  .scene p { margin:7px 0 0; line-height:1.5; }
+  .question { font-size:clamp(19px,3.5vw,24px); font-weight:800; line-height:1.35; margin:16px 0; }
+  .answers { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+  button {
+    border:0; border-radius:14px; padding:14px 12px; font-size:16px; font-weight:700;
+    cursor:pointer; transition:transform .12s,filter .12s;
+  }
+  button:active { transform:scale(.98); }
+  .answer { background:white; color:var(--ink); border:2px solid #c8e2e3; min-height:58px; }
+  .answer:hover:not(:disabled) { border-color:var(--blue); background:#f0fcfc; }
+  .answer:disabled { cursor:default; opacity:1; }
+  .answer.correct { background:#d9f5e8; border-color:#35a875; }
+  .answer.wrong { background:#ffe3dc; border-color:#ed806b; }
+  .feedback { min-height:50px; margin:15px 0 4px; font-weight:bold; line-height:1.45; }
+  .next, .start, .restart {
+    background:var(--coral); color:#fff; padding:14px 24px; min-width:145px;
+    box-shadow:0 4px 0 #d56a55;
+  }
+  .next:disabled { opacity:.45; cursor:not-allowed; }
+  .controls { display:flex; justify-content:flex-end; }
+  .hidden { display:none !important; }
+  .intro, .result { text-align:center; padding:10px 8px 20px; }
+  .intro h2, .result h2 { font-size:28px; color:var(--deep); }
+  .intro p, .result p { line-height:1.6; }
+  .big-emoji { font-size:68px; margin:12px; }
+  .result-score { font-size:42px; font-weight:900; color:var(--blue); margin:12px; }
+  .small { font-size:13px; color:#557080; }
+  @media(max-width:520px) {
+    main { padding:15px; }
+    .answers { grid-template-columns:1fr; }
+    .answer { min-height:50px; }
+    .stats { justify-content:center; }
+  }
+</style>
+</head>
+<body>
+<div class="game">
+  <header>
+    <div class="fish">🐠</div>
+    <h1>Fin's Ocean Adventure</h1>
+    <p>Read the story. Answer the questions. Help Fin explore!</p>
+  </header>
+  <main>
+    <section id="intro" class="intro">
+      <div class="big-emoji">🌊 🐟 🦈</div>
+      <h2>Are you ready, ocean explorer?</h2>
+      <p>Help Fin remember his big adventure! Answer 10 questions about the story and its new words.</p>
+      <p><strong>How to play:</strong> Choose one answer. You will get feedback after each question.</p>
+      <button class="start" id="startBtn">Start Adventure</button>
+    </section>
+
+    <section id="quiz" class="hidden">
+      <div class="stats">
+        <div class="pill" id="questionCount">Question 1 / 10</div>
+        <div class="pill" id="score">⭐ Score: 0</div>
+      </div>
+      <div class="progress"><span id="progressBar"></span></div>
+      <div class="scene">
+        <div class="emoji" id="sceneEmoji">🐠</div>
+        <p id="sceneText">Fin is ready for an adventure!</p>
+      </div>
+      <div class="question" id="questionText"></div>
+      <div class="answers" id="answers"></div>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+      <div class="controls">
+        <button class="next" id="nextBtn" disabled>Next ➜</button>
+      </div>
+    </section>
+
+    <section id="result" class="result hidden">
+      <div class="big-emoji" id="resultEmoji">🏆</div>
+      <h2>Adventure Complete!</h2>
+      <div class="result-score" id="finalScore">0 / 10</div>
+      <p id="resultMessage"></p>
+      <button class="restart" id="restartBtn">Play Again</button>
+      <p class="small">Fin says: “The ocean is big, but friendship makes any journey possible!”</p>
+    </section>
+  </main>
+</div>
+<script>
+const questions = [
+  {emoji:"🐠", scene:"Fin is a little blue fish. He loves exploring the ocean.", q:"What colour is Fin?", a:["Orange","Blue","Green","Yellow"], correct:1, explain:"That's right! Fin is a little blue fish."},
+  {emoji:"🪸", scene:"Fin swims around the reef and looks for food.", q:"Where does Fin live?", a:["In a forest","In a city","In the ocean","On a farm"], correct:2, explain:"Correct! Fin lives in a beautiful ocean."},
+  {emoji:"🐠🐚", scene:"Fin meets a small orange fish hiding behind a shell.", q:"Why is the orange fish hiding?", a:["It is sleepy","A big shark is nearby","It is playing football","It is hungry"], correct:1, explain:"Yes! The orange fish is afraid of the big shark."},
+  {emoji:"🦈", scene:"Suddenly, a huge shark appears and hunts for small fish.", q:"Which animal is dangerous in the story?", a:["A turtle","A jellyfish","A seahorse","A shark"], correct:3, explain:"Correct! The shark is hunting for small fish."},
+  {emoji:"🪨", scene:"Fin and his friend hide behind a big rock in a dark cave.", q:"Where do the two fish hide?", a:["Behind a big rock","Inside a treasure chest","Under a shell","On the sand"], correct:0, explain:"Great! They hide behind a big rock."},
+  {emoji:"🐢", scene:"The shark leaves. Fin and his friend meet other sea creatures.", q:"Who welcomes the fish?", a:["A dolphin","A turtle","A crab","A shark"], correct:1, explain:"That's right! A friendly turtle welcomes them."},
+  {emoji:"🪼", scene:"Together, the friends swim past seaweed and see a jellyfish.", q:"What do they see on their bigger adventure?", a:["A school","A bicycle","A jellyfish","A house"], correct:2, explain:"Yes! They see a jellyfish, a school of fish, and a treasure chest."},
+  {emoji:"🧰", scene:"The friends discover something special under the sea.", q:"What does 'treasure' mean?", a:["A dangerous animal","A valuable or special thing","A kind of seaweed","A small rock"], correct:1, explain:"Correct! Treasure is something valuable or special."},
+  {emoji:"💨🐟", scene:"The orange fish can swim faster than Fin.", q:"What is the opposite of 'bigger'?", a:["Faster","Braver","Smaller","Longer"], correct:2, explain:"Exactly! The opposite of bigger is smaller."},
+  {emoji:"🤝", scene:"Fin learns to be careful, help others, and never give up.", q:"What is the lesson of the story?", a:["Never make friends","The ocean is always safe","Help others and never give up","Always swim alone"], correct:2, explain:"Well done! The story teaches us to be careful, help others, and never give up."}
+];
+
+let current = 0;
+let points = 0;
+let answered = false;
+
+const $ = id => document.getElementById(id);
+function show(section) {
+  ["intro","quiz","result"].forEach(id => $(id).classList.toggle("hidden", id !== section));
+}
+function startGame() {
+  current = 0; points = 0; answered = false;
+  show("quiz"); renderQuestion();
+}
+function renderQuestion() {
+  const item = questions[current];
+  answered = false;
+  $("questionCount").textContent = `Question ${current+1} / ${questions.length}`;
+  $("score").textContent = `⭐ Score: ${points}`;
+  $("progressBar").style.width = `${(current/questions.length)*100}%`;
+  $("sceneEmoji").textContent = item.emoji;
+  $("sceneText").textContent = item.scene;
+  $("questionText").textContent = item.q;
+  $("feedback").textContent = "";
+  $("nextBtn").disabled = true;
+  $("nextBtn").textContent = current === questions.length-1 ? "See Result ➜" : "Next ➜";
+  const holder = $("answers");
+  holder.innerHTML = "";
+  item.a.forEach((answer, index) => {
+    const btn = document.createElement("button");
+    btn.className = "answer";
+    btn.textContent = answer;
+    btn.addEventListener("click", () => chooseAnswer(index, btn));
+    holder.appendChild(btn);
+  });
+}
+function chooseAnswer(index, selected) {
+  if (answered) return;
+  answered = true;
+  const item = questions[current];
+  const buttons = [...$("answers").children];
+  buttons.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === item.correct) btn.classList.add("correct");
+  });
+  if (index === item.correct) {
+    points++;
+    $("feedback").textContent = "🌟 Correct! " + item.explain;
+  } else {
+    selected.classList.add("wrong");
+    $("feedback").textContent = "💙 Good try! " + item.explain;
+  }
+  $("score").textContent = `⭐ Score: ${points}`;
+  $("nextBtn").disabled = false;
+}
+function nextQuestion() {
+  if (!answered) return;
+  current++;
+  if (current < questions.length) renderQuestion();
+  else finishGame();
+}
+function finishGame() {
+  show("result");
+  $("progressBar").style.width = "100%";
+  $("finalScore").textContent = `${points} / ${questions.length}`;
+  let message, emoji;
+  if (points >= 9) { message = "Amazing! You are an Ocean Expert. Fin is proud of you!"; emoji = "🏆"; }
+  else if (points >= 7) { message = "Great job! You remember Fin's adventure very well."; emoji = "🐬"; }
+  else if (points >= 5) { message = "Good effort! Read the story again and try once more."; emoji = "🐢"; }
+  else { message = "Keep practising! Every explorer learns step by step."; emoji = "🐠"; }
+  $("resultMessage").textContent = message;
+  $("resultEmoji").textContent = emoji;
+}
+$("startBtn").addEventListener("click", startGame);
+$("nextBtn").addEventListener("click", nextQuestion);
+$("restartBtn").addEventListener("click", startGame);
+</script>
+</body>
+</html>
